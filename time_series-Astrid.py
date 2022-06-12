@@ -58,14 +58,16 @@ train,test = train_test_split(data,n_test) # train_test_split（）函数将数�
 #--训练集
 Train = series_to_supervised(train,n_in = 6) #将时间数据集转换为用于学习训练的数据集,从上面👆划分出来的train中选60%
 X_train,y_train = Train[:,:-1],Train[:,-1] # X:要划分的样本特征集（输入的信息） y:需要划分的样本结果（输出结果）
-print("--Train-- :",Train)
+print("--Train-- :")
+print(Train)
 
 ##梯度提升----------------------------------------
 
 #--测试集
 Test = series_to_supervised(train,n_in = 6)
 X_test,y_test = Train[:,:-1],Train[:,-1]
-print("--Test--: ",Test)
+print("--Test--: ")
+print(Test)
 
 #-----建立回归模型，使用训练集train
 model = RandomForestRegressor(n_estimators = 1000) #n_estimators：决策树的个数，越多越好，但是性能就会越差
@@ -109,6 +111,9 @@ for q in quantiles:
     predict,model = GBM(q)
     GBM_models.append(model) # 上面已经将GBM_models的形式定义为列表，这里填充列表
     GBM_actual_pred = pd.concat([GBM_actual_pred,predict],axis=1) # 填充数据框
+    
+print("--GBM_actual_pred--")
+print(GBM_actual_pred)
 
 GBM_actual_pred.columns = quantiles
 GBM_actual_pred['actual'] = y_test
@@ -154,11 +159,15 @@ correctPcnt(GBM_actual_pred)
 from sklearn.ensemble import RandomForestRegressor
 rf = RandomForestRegressor(n_estimators=200,random_state=0,min_samples_split=10)
 
+print("--X_train--")
+print(X_train)
+print("--y_train--")
+print(y_train)
 rf.fit(X_train,y_train)
 
 pred_Q = pd.DataFrame()
 for pred in rf.estimators_:
-    temp = pd.Series(pred.predict(X_test).tound(2))
+    temp = pd.Series(pred.predict(X_test).round(2))
     pred_Q = pd.concat([pred_Q,temp],axis=1)
 pred_Q.head()
 
@@ -168,9 +177,13 @@ for q in quantiles:
     s = pred_Q.quantile(q=q,axis = 1)
     RF_actual_pred = pd.concat([RF_actual_pred,s],axis = 1,sort = False)
     
-RF_actual_pred.columns = quantiles
+print("--RF_actual_pred--")
+print(RF_actual_pred)
+print("quantiles:",quantiles)
+
+RF_actual_pred.columns=quantiles
 RF_actual_pred['actual'] = y_test
-RF_actual_pred['interval'] = RF_actual_pred[np.max(quantiles) - np.min(quantiles)]
+RF_actual_pred['interval'] = RF_actual_pred[np.max(quantiles)] - RF_actual_pred[np.min(quantiles)]
 RF_actual_pred = RF_actual_pred.sort_values('interval')
 RF_actual_pred = RF_actual_pred.round(2)
 RF_actual_pred
@@ -181,10 +194,11 @@ plt.fill_between(
     np.arange(RF_actual_pred.shape[0]), RF_actual_pred[0.01], RF_actual_pred[0.99], alpha=0.5, color="r",
     label="Predicted interval")
 
-plt.xlabel("Ordered samples.")
-plt.ylabel("Values and prediction intervals.")
+
 plt.xlim([0, 100])
 plt.ylim([20, 60])
+plt.xlabel("Ordered samples.")
+plt.ylabel("Values and prediction intervals.")
 
 plt.legend()
 plt.show()
